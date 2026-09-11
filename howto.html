@@ -1,0 +1,272 @@
+<title>BlockBlock 更新のしかた</title>
+<style>
+  :root {
+    --bg: #EEF1F4;
+    --surface: #FFFFFF;
+    --surface-2: #F6F4EF;
+    --ink: #1B2027;
+    --ink-soft: #55606B;
+    --ink-faint: #7C8790;
+    --line: #D9DEE3;
+    --brand-red: #A8402B;
+    --brand-yellow: #B8791A;
+    --status-done-ink: #1F6B4B;
+    --status-done-bg: #DEEEE5;
+    --status-todo-ink: #A8461C;
+    --status-todo-bg: #F7E3D6;
+    --focus-ring: #2F6FB0;
+    --shadow: 0 1px 2px rgba(27,32,39,0.06), 0 6px 20px rgba(27,32,39,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181C; --surface: #1B2126; --surface-2: #211E19;
+      --ink: #E9ECEF; --ink-soft: #A6B0B9; --ink-faint: #7E8891; --line: #2D353C;
+      --brand-red: #E2694C; --brand-yellow: #E8B24A;
+      --status-done-ink: #7FD3AC; --status-done-bg: #1C3229;
+      --status-todo-ink: #F0A374; --status-todo-bg: #3A2419;
+      --focus-ring: #6AA9E0; --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181C; --surface: #1B2126; --surface-2: #211E19;
+    --ink: #E9ECEF; --ink-soft: #A6B0B9; --ink-faint: #7E8891; --line: #2D353C;
+    --brand-red: #E2694C; --brand-yellow: #E8B24A;
+    --status-done-ink: #7FD3AC; --status-done-bg: #1C3229;
+    --status-todo-ink: #F0A374; --status-todo-bg: #3A2419;
+    --focus-ring: #6AA9E0; --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+    line-height: 1.75; -webkit-text-size-adjust: 100%;
+  }
+  h1, h2, h3, .disp { font-family: "Big Shoulders Display", "Hiragino Sans", sans-serif; text-wrap: balance; letter-spacing: 0.01em; }
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  a { color: var(--brand-red); }
+  :focus-visible { outline: 2.5px solid var(--focus-ring); outline-offset: 2px; border-radius: 3px; }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 100px; }
+
+  .topbar { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .topbar-inner { max-width: 760px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .brand { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 1.15rem; letter-spacing: 0.02em; white-space: nowrap; color: var(--ink); }
+  .brand em { color: var(--brand-red); font-style: normal; }
+  .nav { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { flex: none; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.03em; color: var(--ink-soft); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; background: var(--surface); }
+  .nav a:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  .hero { padding: 44px 0 30px; }
+  .eyebrow { font-family: "IBM Plex Mono", monospace; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand-red); margin: 0 0 10px; }
+  h1.title { font-size: clamp(1.9rem, 7vw, 2.7rem); line-height: 1.1; margin: 0 0 16px; font-weight: 800; }
+  .lede { font-size: 1.06rem; color: var(--ink-soft); max-width: 62ch; margin: 0; }
+  .back-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; color: var(--ink-soft); text-decoration: none; }
+  .back-link:hover { color: var(--brand-red); }
+
+  section { padding: 44px 0; border-top: 1px solid var(--line); }
+  section:first-of-type { border-top: none; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+  .sec-num { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 1.05rem; color: var(--brand-red); letter-spacing: 0.04em; }
+  h2 { font-size: clamp(1.4rem, 5vw, 1.8rem); margin: 0; font-weight: 700; }
+  .sec-sub { color: var(--ink-soft); font-size: 0.98rem; margin: -6px 0 22px; max-width: 62ch; }
+  p { max-width: 66ch; }
+  h3 { font-size: 1.1rem; margin: 26px 0 8px; font-weight: 700; }
+
+  .term-cards { display: grid; gap: 14px; margin: 20px 0; }
+  .term-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .term-card h4 { margin: 0 0 6px; font-family: "IBM Plex Mono", monospace; font-size: 0.95rem; color: var(--brand-red); font-weight: 600; }
+  .term-card p { margin: 0; color: var(--ink); font-size: 0.95rem; max-width: none; }
+
+  .steps { counter-reset: step; display: grid; gap: 0; margin: 22px 0; border-left: 2px solid var(--line); padding-left: 0; }
+  .step { position: relative; padding: 0 0 26px 30px; }
+  .step:last-child { padding-bottom: 4px; }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    position: absolute; left: -15px; top: 0;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--brand-red); color: #fff;
+    font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step h4 { margin: 3px 0 6px; font-size: 1.02rem; font-weight: 700; }
+  .step p { margin: 0; color: var(--ink-soft); font-size: 0.94rem; }
+  .step code { background: var(--surface-2); padding: 1px 6px; border-radius: 4px; color: var(--ink); }
+  .step .say {
+    display: block; margin-top: 8px; padding: 8px 12px; background: var(--surface-2);
+    border-radius: 8px; font-family: "IBM Plex Mono", monospace; font-size: 0.82rem; color: var(--ink);
+  }
+  .step .say::before { content: "例: "; color: var(--ink-faint); }
+
+  figure.diagram { margin: 26px 0 8px; }
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram-scroll { overflow-x: auto; border-radius: 10px; }
+  .node rect { fill: var(--surface-2); stroke: var(--ink-faint); stroke-width: 1.4; }
+  .node text { fill: var(--ink); }
+  .node.accent rect { fill: var(--status-done-bg); stroke: var(--status-done-ink); }
+  .node.accent text { fill: var(--status-done-ink); }
+  .diagram .flow-line { stroke: var(--ink-faint); stroke-width: 1.6; fill: none; }
+  figcaption { font-size: 0.85rem; color: var(--ink-soft); margin-top: 10px; max-width: 62ch; }
+
+  .notice { border-left: 4px solid var(--brand-red); background: var(--surface-2); border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 20px 0; font-size: 0.92rem; color: var(--ink); max-width: none; }
+  .notice p { margin: 0; max-width: none; }
+  .notice-label { font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--brand-red); display: block; margin-bottom: 6px; }
+
+  .checklist { list-style: none; margin: 20px 0; padding: 0; display: grid; gap: 10px; }
+  .checklist li { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 0.93rem; box-shadow: var(--shadow); }
+  .checklist li::before { content: "✓"; color: var(--status-done-ink); font-weight: 700; flex: none; }
+
+  footer { border-top: 1px solid var(--line); padding: 30px 0 10px; color: var(--ink-faint); font-size: 0.85rem; }
+  footer a { color: var(--ink-soft); }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">Block<em>Block</em></div>
+    <nav class="nav" aria-label="セクション">
+      <a href="#words">01 3つの言葉</a>
+      <a href="#why-not-gas">02 なぜGASでない</a>
+      <a href="#flow">03 直し方</a>
+      <a href="#care">04 気をつけること</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <p class="eyebrow">BlockBlock 引き継ぎ資料・別冊</p>
+    <h1 class="title">コードを書けなくても、<br>Claude Codeで直す方法</h1>
+    <p class="lede">「ターミナル」も「GitHub」も触ったことがない人向けに、BlockBlockのコードを実際に更新する考え方をまとめました。専門用語は最小限にし、代わりに「何をしているつもりで作業するか」を説明します。</p>
+    <a class="back-link" href="https://claude.ai/code/artifact/f0a8bd20-6641-4fec-9551-6b2c36efcccd" target="_blank" rel="noopener">← 「BlockBlock 引き継ぎノート」に戻る</a>
+  </div>
+
+  <section id="words">
+    <div class="sec-head"><span class="sec-num">01</span><h2>まず知っておく3つの言葉</h2></div>
+    <p class="sec-sub">これさえ分かれば、あとは全部この3つの組み合わせです。</p>
+
+    <div class="term-cards">
+      <div class="term-card">
+        <h4>ターミナル</h4>
+        <p>文字を打ち込んでコンピュータに直接指示を出すための画面です。ふだんのアプリのようなボタンやメニューはなく、命令文を1行ずつ打って実行します。<strong>Claude Codeは、このターミナルの中で動くプログラム</strong>です。Macなら最初から入っている「ターミナル」というアプリを開くだけで使えます。</p>
+      </div>
+      <div class="term-card">
+        <h4>GitHub / リポジトリ</h4>
+        <p>たとえるなら「プロジェクトの共有ロッカー + 変更履歴の記録帳」です。ファイル一式(=リポジトリ)を保管し、「いつ・誰が・何を変えたか」を全部記録してくれます。BlockBlockは <code>github.com/NawaMayumi/blockblock</code> というリポジトリに置かれています。</p>
+      </div>
+      <div class="term-card">
+        <h4>commit / push</h4>
+        <p><strong>commit</strong>は「この変更をひとまとまりの記録として残す」こと、<strong>push</strong>はその記録を実際にGitHub(共有ロッカー)へ送って反映させることです。push して初めて、みんなが見られる状態(公開サイトも含む)に変更が届きます。</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="why-not-gas">
+    <div class="sec-head"><span class="sec-num">02</span><h2>なぜGoogle Apps Scriptではないのか</h2></div>
+    <p class="sec-sub">「Google Workspaceが使えるなら、それで作れないの?」という疑問への答えです。</p>
+
+    <p>結論から言うと、<strong>Google Apps Script(GAS)ではこのアプリは作れません。</strong>理由はGASの得意・不得意ではなく、もっと単純な制約です。</p>
+    <p>GASで作るWebアプリは、Google側が用意する「サンドボックス化されたiframe」という枠の中に読み込まれます。ブラウザのカメラ機能は、その枠に<code>camera</code>という許可が明示的に与えられていないと使えない仕組みになっており、<strong>GASのiframeにはその許可を与える方法がありません</strong>。BlockBlockの心臓部は「カメラでブロックを認識すること」なので、この時点で選択肢から外れます。</p>
+    <p>一方、今の方式(ただのHTML・CSS・JSファイルをGitHub Pagesで配る)は、ページがiframeに包まれず<strong>ブラウザで直接開かれる</strong>ため、カメラの許可ダイアログも普通に出ます。遠回りに見えて、実はこれが一番シンプルに動く方法でした。</p>
+  </section>
+
+  <section id="flow">
+    <div class="sec-head"><span class="sec-num">03</span><h2>実際の直し方</h2></div>
+    <p class="sec-sub">Claude Codeに頼んで、変更を公開サイトまで届ける一連の流れです。</p>
+
+    <div class="steps">
+      <div class="step">
+        <h4>ターミナルを開く</h4>
+        <p>Macなら「ターミナル」アプリを開きます(Spotlight検索で「ターミナル」と打てば見つかります)。</p>
+      </div>
+      <div class="step">
+        <h4><code>claude</code> と打ってEnter</h4>
+        <p>Claude Codeが起動し、会話できる状態になります。</p>
+      </div>
+      <div class="step">
+        <h4>日本語で、直したいことを伝える</h4>
+        <p>「どこの」「何を」「どうしたいか」を具体的に書くほど正確に伝わります。</p>
+        <span class="say">左上のスコア表示が見づらいので、もっと大きくしてください</span>
+      </div>
+      <div class="step">
+        <h4>提案された変更を確認する</h4>
+        <p>Claude Codeがファイルを編集しますが、<strong>実際にはあなたが確認して承認するまで確定しません。</strong>変更内容(どこがどう変わるか)を見せてくるので、目を通してから進めます。</p>
+      </div>
+      <div class="step">
+        <h4>「pushして」「公開サイトに反映して」と伝える</h4>
+        <p>Claude Codeがcommit・pushまで行います。</p>
+        <span class="say">これでpushして、公開サイトに反映してください</span>
+      </div>
+      <div class="step">
+        <h4>数十秒待って、公開URLを確認する</h4>
+        <p>GitHub Actions(自動処理の仕組み)が自動的にGitHub Pagesへ反映するよう設定済みなので、手動での「公開」操作は不要です。<a href="https://nawamayumi.github.io/blockblock/" target="_blank" rel="noopener">nawamayumi.github.io/blockblock</a> を開き直して確認します。</p>
+      </div>
+    </div>
+
+    <figure class="diagram">
+      <div class="diagram-scroll">
+        <svg viewBox="0 0 640 260" role="img" aria-label="日本語での指示から、Claude Codeによるコード編集、確認、push、GitHub Actionsによる自動デプロイを経て公開サイトに反映されるまでの流れを示す図">
+          <defs>
+            <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"></path>
+            </marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="103" width="140" height="54" rx="10"></rect>
+            <text x="80" y="125" text-anchor="middle" font-size="12" font-weight="600">日本語で</text>
+            <text x="80" y="142" text-anchor="middle" font-size="12" font-weight="600">やりたいことを伝える</text>
+          </g>
+          <path class="flow-line" d="M150,130 L188,130" marker-end="url(#arrow2)"></path>
+          <g class="node">
+            <rect x="190" y="103" width="140" height="54" rx="10"></rect>
+            <text x="260" y="125" text-anchor="middle" font-size="12" font-weight="600">Claude Codeが</text>
+            <text x="260" y="142" text-anchor="middle" font-size="12" font-weight="600">コードを編集</text>
+          </g>
+          <path class="flow-line" d="M330,130 L368,130" marker-end="url(#arrow2)"></path>
+          <g class="node">
+            <rect x="370" y="103" width="120" height="54" rx="10"></rect>
+            <text x="430" y="125" text-anchor="middle" font-size="12" font-weight="600">あなたが</text>
+            <text x="430" y="142" text-anchor="middle" font-size="12" font-weight="600">確認・承認</text>
+          </g>
+          <path class="flow-line" d="M490,130 L508,130 C518,130 518,130 528,130" marker-end="url(#arrow2)"></path>
+          <g class="node accent">
+            <rect x="530" y="103" width="100" height="54" rx="10"></rect>
+            <text x="580" y="125" text-anchor="middle" font-size="12" font-weight="700">push</text>
+            <text x="580" y="142" text-anchor="middle" font-size="11">commit + push</text>
+          </g>
+          <path class="flow-line" d="M580,157 C580,190 400,205 260,208" marker-end="url(#arrow2)"></path>
+          <g class="node">
+            <rect x="60" y="181" width="200" height="54" rx="10"></rect>
+            <text x="160" y="203" text-anchor="middle" font-size="12" font-weight="600">GitHub Actionsが自動で</text>
+            <text x="160" y="220" text-anchor="middle" font-size="12" font-weight="600">GitHub Pagesへ反映</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>図: あなたが日本語で伝えた内容が、確認と承認を経てpushされ、自動デプロイによって数十秒後には公開サイトに反映される。</figcaption>
+    </figure>
+  </section>
+
+  <section id="care">
+    <div class="sec-head"><span class="sec-num">04</span><h2>気をつけること</h2></div>
+    <p class="sec-sub">今の運用体制だからこそ、意識しておきたい点です。</p>
+
+    <ul class="checklist">
+      <li>今は誰でも <code>main</code>(本番)ブランチに直接pushできる状態です。複数人で触るようになったら、「pushする前に別の人が確認する」というレビューの仕組み(Pull Request)を検討してください。</li>
+      <li>大きく作り変える前は、今の状態を一度pushしておく(区切りをつけておく)と、うまくいかなかったときに戻しやすくなります。Claude Codeに頼めば基本的にやってくれます。</li>
+      <li>思っていたのと違う変更になった・分からなくなったときは、遠慮なく「さっきの変更を元に戻して」と伝えてください。</li>
+      <li>コードの中身(なぜそう動くか)を詳しく知りたいときは、「BlockBlock 引き継ぎノート」の該当箇所を先に読んでからClaude Codeに質問すると話が早いです。</li>
+    </ul>
+
+    <div class="notice">
+      <span class="notice-label">迷ったら</span>
+      <p>「これで合っているか分からない」まま進めるより、Claude Codeに「今何をしようとしているか」「何が不安か」をそのまま伝えてしまうのが一番早い解決策です。日本語での説明を理解して、次にすべきことを提案してくれます。</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>関連ページ: <a href="https://claude.ai/code/artifact/f0a8bd20-6641-4fec-9551-6b2c36efcccd" target="_blank" rel="noopener">BlockBlock 引き継ぎノート</a> ・ ソース: <a href="https://github.com/NawaMayumi/blockblock" target="_blank" rel="noopener">github.com/NawaMayumi/blockblock</a></p>
+  </footer>
+</div>
